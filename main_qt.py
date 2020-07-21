@@ -17,7 +17,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setWindowTitle("Data Collection")
         self._connection()
         self.time = 1.5
-        self.rest = 20 * 60
+        self.rest = 6 
         self.no_cycle = 300 / 3
 
 
@@ -37,6 +37,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.timer.setInterval(1)
         self.timer.start()
         self.counter = 0
+        self.rest_state = False
 
 
 
@@ -71,9 +72,17 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
     def _clock(self):
         if self.START == True:
             self.counter += 10
-            if self.counter  > self.time * 1000 * 2:
+            if self.counter  > self.time * 1000 * 2 and self.counter < self.rest * 1000:
+                self.rest_state = True
+            elif self.counter > self.time * 1000 * 2 + self.rest * 1000:
                 self.counter = 0
-            self.my_ploter.myplot(abs(self.counter - self.time * 1000)/(self.time * 1000))
+                self.rest_state = False
+            if not self.rest_state:
+                self.my_ploter.myplot(abs(self.counter - self.time * 1000)/(self.time * 1000))
+            else:
+                print(self.counter, self.time * 1000 * 2 + self.rest * 1000)
+                self.my_ploter.redplot()
+
 
 
 class Mplotcanvas(FigureCanvas):
@@ -90,7 +99,6 @@ class Mplotcanvas(FigureCanvas):
 
 
     def myplot(self, i):
-        print(i)
         self.axes.cla()
         circle = plt.Circle((0.5,0.5), radius = 0.5, fc = 'blue', alpha = i)
         self.axes.add_patch(circle)
@@ -98,6 +106,14 @@ class Mplotcanvas(FigureCanvas):
         circle = plt.Circle((0.5,0.5), radius = 0.5, fc = 'green', alpha = 1 -i)
         self.axes.add_patch(circle)
         self.draw()
+    
+    def redplot(self):
+        self.axes.cla()
+        circle = plt.Circle((0.5,0.5), radius = 0.5, fc = 'red', alpha = 1)
+        self.axes.add_patch(circle)
+        self.axes.axis('off')
+        self.draw()
+
 
 
 
