@@ -3,8 +3,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import pyttsx3
 import matplotlib as mpl
 from matplotlib.figure import Figure
+import time
 
 # pyqt imports
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -16,8 +18,8 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("Data Collection")
         self._connection()
-        self.time = 1.5
-        self.rest = 6 
+        self.time = 0.75
+        self.rest = 6 / 2.5 
         self.no_cycle = 300 / 3
 
 
@@ -38,6 +40,34 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.timer.start()
         self.counter = 0
         self.rest_state = False
+        self.Tts_enable = False
+        # self._start_tts()
+        self.main_time = time.time()
+    
+
+    def _start_tts(self):
+        self.tts_engine = pyttsx3.init()
+        self.tts_engine.setProperty('volume', 1.0)
+        self.Tts_enable = True
+    
+    def _say(self):
+        if self.Tts_enable:
+            if self.counter == 10.0:
+                self.tts_engine.say('start')
+                print('said start')
+                self.tts_engine.runAndWait()
+                print(time.time() - self.main_time)
+                # self.tts_stop()
+            elif self.counter == self.time * 1000:
+                self.tts_engine.say('down')
+                self.tts_engine.runAndWait()
+                print(time.time() - self.main_time)
+               # self.stop()
+            elif self.counter == self.time * 1000 * 2:
+                self.tts_engine.say('stop')
+                self.tts_engine.runAndWait()
+                print(time.time() - self.main_time)
+                # self.stop()
 
 
 
@@ -59,9 +89,10 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.open_window()
 
     def _read_sub_window(self):
-        self.time = int(self.ui.squat_time.toPlainText())
-        self.rest = int(self.ui.rest_time.toPlainText())
-        self.cycle = int(self.ui.no_cycle.toPlainText())
+        # dividing by three because the loop will take that much time
+        self.time = int(self.ui.squat_time.toPlainText()) / 3
+        self.rest = int(self.ui.rest_time.toPlainText()) / 3
+        self.cycle = int(self.ui.no_cycle.toPlainText()) /3
         print(self.time,self.rest, self.cycle)
         self.sub_window.close()
 
@@ -80,8 +111,9 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
             if not self.rest_state:
                 self.my_ploter.myplot(abs(self.counter - self.time * 1000)/(self.time * 1000))
             else:
-                print(self.counter, self.time * 1000 * 2 + self.rest * 1000)
+                # print(self.counter, self.time * 1000 * 2 + self.rest * 1000)
                 self.my_ploter.redplot()
+            self._say()
 
 
 
